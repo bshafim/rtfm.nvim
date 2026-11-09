@@ -1,153 +1,213 @@
-# lookup.nvim — Plan
+# rtfm.nvim — Plan
 
 > Have you ever had to read docs while coding?
 > Have you ever wanted to never, ever leave Neovim?
-> **lookup.nvim**: search and read any docs without leaving your editor.
+> **rtfm.nvim**: read the f***ing manual without leaving your editor.
 
-## Goals
+## What makes it different
 
-- Pick a doc source → type a query → see matching pages → read the page as Markdown in a buffer.
-- No build step: pure Lua + `curl`. Install with lazy.nvim and it works.
-- Reliable search. This is where `docfetch.nvim` failed (it scraped HTML search pages, which most
-  docs sites render with JS). Here, every source uses an **adapter** that queries a real index or API.
-- Fast: local indexes are filtered as you type, remote APIs are debounced, everything is async
-  (never block the UI).
-- Favorites, bookmarks, history, and an offline cache.
+There are already devdocs-in-Neovim plugins, so search-and-open alone isn't enough. rtfm is built
+around four things:
 
-Non-goals (for v1): full JS rendering, images, rendering arbitrary non-docs websites well.
+1. **Version-aware docs.** It reads `go.mod`, `package.json`, `Cargo.toml`, `pyproject.toml` (and
+   their lockfiles) and opens docs for the exact version you're using, not the latest.
+2. **Docs for the symbol under the cursor.** Put the cursor on `http.NewRequest`, press `K`
+   (or `:Rtfm symbol`), and the right page opens in a split, jumped to the right section. No search needed.
+3. **Local semantic search.** Docs are chunked, indexed and embedded with a small local model, so
+   "how do I cancel a request after a timeout" finds `context.WithTimeout` even when you don't know
+   the API name. Hybrid ranking (BM25 + embeddings) so it still works without a model.
+4. **Fully offline.** Install docs once (`:Rtfm install`, or `:Rtfm install project` for exactly the
+   versions you depend on). Search, reading, link following, and semantic search then work on a plane.
 
-## Requirements
+Plus the original flow: a fast floating picker (pick a source → type → results → read as Markdown
+in a buffer), favorites, bookmarks, history.
 
-- Neovim ≥ 0.10 (`vim.system`, `vim.uv`, `vim.json`)
-- `curl` on PATH
-- Optional: `pandoc` (better HTML→Markdown), `render-markdown.nvim` / `markview.nvim` (prettier display)
+## Stack
+
+- Pure Lua, Neovim ≥ 0.10. No build step. `curl` for network.
+- LuaJIT FFI for vector math (float32 arrays, fast cosine top-k); pure-Lua fallback.
+- Embeddings come from a **local** model server:
+  - default: **Ollama** (`all-minilm` / `nomic-embed-text`) on `localhost:11434`
+  - or any OpenAI-compatible `/v1/embeddings` endpoint (llama.cpp server, LM Studio, …)
+  - no model configured → lexical BM25 only (still useful, still offline)
+- Optional: `pandoc` (better HTML→Markdown), `render-markdown.nvim` / `markview.nvim`.
 
 ## User flow
 
 ```
-:Lookup                         ┌ Lookup ───────────────────────────┬─ Preview ──────────────────┐
-                                │ [ Go ] context withcancel█         │ # func WithCancel          │
+:Rtfm                           ┌ rtfm ──────────────────────────────┬─ Preview ──────────────────┐
+                                │ [ Go 1.22 ] cancel after timeout█  │ # func WithTimeout         │
 1. Type to filter sources       │────────────────────────────────────│                            │
-   (favorites ★ first)          │ ▸ context.WithCancel      func     │ func WithCancel(parent     │
-2. <Tab>/<CR> picks one → it    │   context.WithCancelCause func     │   Context) (ctx Context,   │
-   becomes a chip in the prompt │   context.CancelFunc      type     │   cancel CancelFunc)       │
-3. Type a query → results       │   context (package)       pkg      │                            │
-4. <CR> open   <S-CR> split     │                                    │ WithCancel returns a       │
-   <C-v> vsplit <C-t> tab       │                                    │ derived context that ...   │
-   <BS> on empty prompt drops   │  4 results · devdocs               │                            │
-   the chip → back to sources   └────────────────────────────────────┴────────────────────────────┘
+   (project deps ⚑, favorites ★ │ ▸ context.WithTimeout   ≈ semantic │ func WithTimeout(parent    │
+   first)                       │   context.WithDeadline  ≈ semantic │   Context, timeout ...     │
+2. <Tab>/<CR> picks one → chip  │   http.Client.Timeout   ≈ semantic │                            │
+3. Type a query → results       │   context.WithCancel      func     │ WithTimeout returns ...    │
+4. <CR> open   <S-CR>/<C-s> split, <C-v> vsplit, <C-t> tab, <C-y> float (all configurable)
+   <BS> on an empty prompt drops the chip → back to sources
 ```
 
-Direct forms skip steps: `:Lookup go`, `:Lookup go context.WithCancel`, and `K`-style lookup of the
-word under the cursor using a filetype → source map.
+- `:Rtfm go context.WithCancel` jumps straight in. `:Rtfm! go WithCancel` opens the best match.
+- `:Rtfm ask <question>` runs semantic search across every installed doc.
+- `K` / `:Rtfm symbol` opens docs for the symbol under the cursor (see below).
 
-## Search adapters
+## Sources and adapters
 
-Every source has the shape `{ id, name, adapter, opts }`. Adapters implement:
+Every source is `{ id, name, adapter, version?, ... }`. Adapters implement:
 
 ```lua
-adapter.search(source, query, cb)   -- async → { {title, url, kind?, snippet?}, ... }
-adapter.fetch(source, item, cb)     -- async → { title, markdown, url, links }
-adapter.mode                        -- "local" (filter as you type) | "remote" (debounced/on-enter)
+adapter.mode                          -- "local" (fuzzy as you type) | "remote" (debounced)
+adapter.load(source, cb)              -- local: full entry list (title, path, kind)
+adapter.search(source, query, cb)     -- remote: results
+adapter.fetch(source, item, cb)       -- page: { html | markdown, url, base, fragment }
+adapter.resolve(source, url)          -- link under cursor → item in this source (or nil)
+adapter.pages(source, cb)             -- full page set, for offline install + indexing
+adapter.versioned(source, version)    -- source pinned to a version (if supported)
 ```
 
-| Adapter | Covers | How |
-|---|---|---|
-| **devdocs** | ~600 docs (Go, Python, JS/MDN, Rust std, Lua, React, Node, Postgres, Docker…) | Catalog `devdocs.io/docs.json`; per-doc `index.json` downloaded once and cached, then fuzzy-searched locally (`matchfuzzy`). Pages are fetched lazily from `documents.devdocs.io/<slug>/<path>.html`. Optional "install for offline" downloads `db.json`. |
-| **github_docs** | docs.github.com | Official search endpoint `/api/search/v1`. |
-| **pkg_go** | pkg.go.dev (third-party Go modules) | Search-page scrape; this one worked in the old code. |
-| **docs_rs** | Rust crates | crates.io API for search, docs.rs for pages. |
-| **algolia** | Any site using Algolia DocSearch (React, Tailwind, Vite, Vue, Docusaurus sites…) | POST to the public DocSearch index with the site's public app ID and search key (the same values its search box uses). Built-in sources ship with verified keys; users can add their own. |
-| **sitemap** | Any other URL a user adds | Fetch `sitemap.xml` (and sitemap indexes), derive titles from paths, cache, fuzzy-search locally. |
+| Adapter | Covers | How | Versions |
+|---|---|---|---|
+| **devdocs** | ~800 docs (Python, JS/MDN, Rust std, Lua, React, Node, Postgres…) | `docs.json` catalog, per-doc `index.json`, pages from `documents.devdocs.io`, `db.json` for offline | Versioned slugs (`python~3.12`, `node~20_lts`, `react~18`) |
+| **gopkg** | Go stdlib + all Go modules | pkg.go.dev search + package pages (symbol anchors) | `pkg@v1.2.3`, `std@go1.22.0` |
+| **docsrs** | Rust crates | crates.io search, docs.rs pages, crate `search-index` for symbols | `docs.rs/<crate>/<version>` |
+| **github** | docs.github.com | Official search API, article bodies come back as Markdown | n/a |
+| **mdn** | MDN Web Docs | MDN search API + page extraction | n/a |
+| **sitemap** | Any site you add | `sitemap.xml`, cached, fuzzy over paths | n/a |
+| **algolia** | Sites with Algolia DocSearch | Uses the app ID, key and index **the user configures** (nothing scraped or shipped) | n/a |
 
-Users can add sources in config (`sources = { mydocs = { adapter = "sitemap", url = "…" } }`) or at
-runtime with `:Lookup add <url>`, which auto-detects the adapter: DocSearch keys in the page →
-algolia, otherwise sitemap.
+## Version awareness (`rtfm.project`)
 
-## Rendering pages
+Walks up from the current buffer to the nearest project root and parses:
 
-- Fetch with curl → extract the main content (`main`, `article`, `[role=main]`, common docs
-  selectors) → convert HTML to Markdown with a small tolerant Lua HTML tokenizer and converter
-  (headings, code blocks with language, lists, tables, links, inline code, `dl`). Use `pandoc`
-  when it's available and enabled.
-- Open as a `nofile` buffer named `lookup://<source>/<path>` with `filetype=markdown`, so
-  render-markdown and markview just work.
-- Viewer keymaps (buffer-local, configurable):
-  - `<CR>` / `gd`: follow the link under the cursor. Same-site links open inside lookup, other
-    links open in the browser.
-  - `<C-o>` / `<C-i>`: back/forward through the page history.
-  - `gO`: table of contents (headings) in a float or loclist.
-  - `gx`: open the current page in the browser. `yu`: yank its URL.
-  - `ma`: bookmark the page. `q`: close.
-- Open target is configurable: `buffer | split | vsplit | tab | float`, with per-key overrides.
+| File | Gives |
+|---|---|
+| `go.mod` | Go version (`go 1.22`) → `std@go1.22.x`; `require` lines → module versions |
+| `Cargo.toml` / `Cargo.lock` | crate versions (lockfile wins) → docs.rs at that version |
+| `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` | `react`, `vue`, `node` engines… → the matching devdocs slug (`react~18`) |
+| `pyproject.toml` / `.python-version` / `requirements*.txt` | Python version → `python~3.12`; packages for display |
+
+- Project deps show up first in the source picker with a ⚑ and their version (`[ Go 1.22 ]`).
+- Version → slug matching picks the closest devdocs version at or below the one in use, and says
+  when it falls back.
+- Results are cached per root and invalidated when the manifest's mtime changes.
+
+## Symbol under the cursor (`rtfm.symbol`)
+
+A resolution chain. The first step that succeeds wins:
+
+1. **LSP.** `textDocument/definition` gives the defining file. Its path identifies the dependency
+   and the exact version:
+   - `$GOROOT/src/net/http/request.go` → stdlib `net/http` at the project's Go version
+   - `.../pkg/mod/github.com/x/y@v1.2.3/z.go` → `pkg.go.dev/github.com/x/y@v1.2.3/z#Symbol`
+   - `.cargo/registry/src/*/serde-1.0.200/...` → `docs.rs/serde/1.0.200/...`
+   - `node_modules/<pkg>/...` or `site-packages/<pkg>/...` → that package's docs
+   - The symbol name and container come from the hover response or document symbols.
+2. **Imports.** Treesitter reads the buffer's imports to expand aliases (`http` → `net/http`,
+   `np` → `numpy`), then combines that with the project version.
+3. **Fuzzy fallback.** Search the filetype's source for the text under the cursor. One exact match
+   opens directly; otherwise the picker opens prefilled.
+
+The page opens in a split (configurable) and jumps to the symbol's anchor.
+
+## Local semantic search (`rtfm.index`)
+
+- **Chunking.** Pages are split by heading into sections of about 200–400 tokens, keeping the
+  heading path ("context › WithTimeout") as context. Code blocks stay with their prose.
+- **Lexical.** A BM25 inverted index (pure Lua, JSON on disk) per doc. Always available.
+- **Embeddings.** Batched requests to the local model. Vectors are normalized float32, stored as one
+  binary file per doc plus a JSON sidecar (chunk → page/anchor). Indexing runs in the background,
+  is resumable, and shows progress.
+- **Query.** Embed the query → brute-force cosine top-k with LuaJIT FFI (tens of thousands of
+  chunks in milliseconds) → fuse with BM25 using reciprocal rank fusion → group results by page.
+- In the picker, a source with an index gets a semantic toggle (`<C-e>`). Long, natural-language
+  queries switch to hybrid mode automatically.
+- `:Rtfm index <source>`, `:Rtfm index project`, `:Rtfm ask …` searches all indexed docs.
+
+## Offline (`rtfm.offline`)
+
+- `:Rtfm install <source>[@version]` downloads everything:
+  - devdocs: the `index.json` and `db.json` files
+  - gopkg: every package page of the module version
+  - docsrs: the crate's pages
+  - sitemap: a polite crawl (concurrency limit, robots-friendly delay)
+  - Everything goes into `stdpath("data")/rtfm/docs/<source>/<version>/`.
+- `:Rtfm install project` installs and indexes every detected dependency at its exact version.
+- Installed docs are always read locally. Versioned docs are immutable and never expire.
+- `offline = true` (or no network) means rtfm never touches the network and says clearly when
+  something isn't installed.
+- `:Rtfm installed` lists installed docs, their size, and whether they're indexed. You can remove or
+  update from there.
+
+## Reading pages
+
+- HTML → main content extraction → Markdown, via a tolerant Lua HTML parser. Optional pandoc.
+- `nofile` buffer `rtfm://<source>/<path>`, `filetype=markdown`.
+- Keymaps (all configurable):
+  - `<CR>`/`gd`: follow a link. Same site opens in rtfm, other sites open in the browser.
+  - `<C-o>`/`<C-i>`: back/forward.
+  - `gO`: table of contents.
+  - `gx`: open in the browser. `yu`: yank the URL.
+  - `ma`: bookmark. `gs`: search this source. `q`: close.
 
 ## Persistence
 
-- `stdpath("data")/lookup/`: `favorites.json` (sources), `bookmarks.json` (pages, with an
-  optional note and tags), `history.json` (recent pages and queries), user-added sources.
-- `stdpath("cache")/lookup/`: devdocs indexes, sitemaps, and rendered pages (TTL, default 7 days).
-  Commands: `:Lookup cache clear`, `:Lookup update`.
+- `stdpath("data")/rtfm/`: favorites, bookmarks (with notes), history, user sources, installed
+  docs, indexes.
+- `stdpath("cache")/rtfm/`: HTTP cache with TTL; a stale copy is used when offline.
 
-## Commands and API
+## Commands
 
 ```
-:Lookup [source] [query]       open picker / jump straight to a source / search directly
-:Lookup bookmarks | history    picker over saved pages
-:Lookup favorite [source]      toggle a source as favorite
-:Lookup add <url> | remove <id>
-:Lookup install <devdoc>       download a devdocs doc for offline use
-:Lookup url <url>              render any URL
-:Lookup cache clear | update
-:checkhealth lookup
+:Rtfm [source] [query]     picker (source may be "go", "python~3.12", "gopkg:github.com/x/y@v1.2.3")
+:Rtfm! source query        open best match directly
+:Rtfm symbol               docs for symbol under cursor (also <Plug>(rtfm-symbol))
+:Rtfm ask {question}       semantic search across installed + indexed docs
+:Rtfm project              show detected deps + versions, pick one
+:Rtfm install {source|project} / uninstall / installed
+:Rtfm index {source|project}
+:Rtfm bookmarks | history | favorite [source]
+:Rtfm add {url} | remove {id}
+:Rtfm url {url}
+:Rtfm cache clear
+:checkhealth rtfm
 ```
-
-Lua: `require("lookup").setup(opts)`, `.open(opts)`, `.search(source, query)`, `.cword()`.
 
 ## Code layout
 
 ```
-lua/lookup/
-  init.lua            setup, public API
-  config.lua          defaults + validation
-  commands.lua        :Lookup subcommands + completion
-  http.lua            async curl wrapper (vim.system), retries, UA, timeouts
-  cache.lua  store.lua   on-disk cache / persistent JSON stores
-  fuzzy.lua           matchfuzzy wrapper + scoring (favor title prefix, kind)
-  sources/init.lua    registry, built-ins, user sources, auto-detect
-  adapters/{devdocs,github_docs,pkg_go,docs_rs,algolia,sitemap}.lua
-  html/{parse,extract,markdown}.lua   tokenizer → main content → markdown
-  ui/picker.lua       floating prompt/results/preview, chip, keymaps, debounce
-  ui/viewer.lua       doc buffers, link following, history, TOC
-  health.lua
-plugin/lookup.lua     lazy command registration
-doc/lookup.txt        vimdoc
-tests/                mini.test headless specs + recorded HTTP fixtures
+lua/rtfm/
+  init.lua config.lua commands.lua health.lua util.lua
+  http.lua cache.lua store.lua url.lua fuzzy.lua
+  sources.lua            registry (builtin, devdocs catalog, user, project)
+  page.lua               fetch → convert → render pipeline (+ in-memory LRU)
+  adapters/{devdocs,gopkg,docsrs,github,mdn,sitemap,algolia,web}.lua
+  html/{parser,extract,markdown}.lua
+  project/{init,go,rust,node,python}.lua
+  symbol/{init,lsp,imports}.lua
+  index/{chunk,bm25,vec,embed,init}.lua
+  offline.lua
+  ui/{picker,viewer,layout}.lua
+plugin/rtfm.lua  doc/rtfm.txt  tests/
 ```
 
-## Phases
+## Build order
 
-1. **Core + DevDocs (MVP).** http, cache, devdocs adapter, HTML→Markdown, the viewer, and the
-   picker's full two-step flow. This alone covers most daily use.
-2. **More adapters.** github_docs, algolia (with built-in verified sources), pkg_go, docs_rs,
-   sitemap, `:Lookup add` auto-detection.
-3. **Personal layer.** Favorites, bookmarks (with notes), history pickers, `K`/cword lookup with
-   a filetype map, offline install.
-4. **Polish.** Vimdoc, `:checkhealth`, README with GIFs, CI (headless tests on stable and nightly),
-   optional pandoc path, and optional Telescope/snacks/fzf-lua frontends.
-
-Each phase ends with passing headless tests and a manual run-through in a real Neovim.
+1. Core: config, http, cache, store, url, fuzzy, the HTML→Markdown pipeline.
+2. Adapters: devdocs, gopkg, docsrs, github, mdn, sitemap, algolia, web.
+3. UI: viewer and picker. Commands.
+4. Project detection and version-aware sources.
+5. Symbol resolution (LSP → imports → fuzzy).
+6. Offline install.
+7. Index: chunking, BM25, embeddings, hybrid search, `:Rtfm ask`.
+8. Favorites, bookmarks, history, health, vimdoc, README, tests, CI.
 
 ## Testing
 
-- Unit: HTML→Markdown against fixture pages (go.dev, MDN, GitHub Docs, Docusaurus), fuzzy
-  scoring, URL resolution, store round-trips.
-- Adapter tests use recorded JSON/HTML fixtures (no network in CI), plus an opt-in `LIVE=1` smoke
-  test against the real endpoints.
-- UI: headless Neovim drives the picker (feed keys, assert buffer contents).
-
-## Prior art (and how this differs)
-
-- `nvim-devdocs` / `devdocs.nvim`: DevDocs only. lookup adds GitHub Docs, Algolia sites, any
-  sitemap site, and a fluid search-as-you-type picker over a remote page set.
-- `docfetch.nvim` (your earlier attempt): Go binary + JSON-RPC + HTML search scraping. lookup
-  drops the binary and replaces scraping with adapters.
+- Headless `nvim -l` test runner, no dependencies.
+- Unit tests:
+  - HTML→Markdown against fixture pages
+  - URL resolution and fuzzy ranking
+  - manifest parsers (go.mod, Cargo.lock, package-lock, pyproject)
+  - LSP path → doc mapping
+  - chunker, BM25, vector top-k, rank fusion
+- Adapter tests use recorded fixtures. `RTFM_LIVE=1` runs smoke tests against the real endpoints.
+- UI: drive the picker headlessly with a fake source.
