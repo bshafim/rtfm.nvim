@@ -49,6 +49,7 @@ local function new_ctx(parent)
     base = parent and parent.base,
     page = parent and parent.page,
     resolve = parent and parent.resolve,
+    lang = parent and parent.lang,
   }
 end
 
@@ -331,6 +332,9 @@ local function pre_block(el, ctx)
     return
   end
   local lang = code_lang(el)
+  if lang == "" then
+    lang = ctx.lang or ""
+  end
   lang = LANG_ALIAS[lang] or lang
   local fence = text:find("```", 1, true) and "~~~~" or "```"
   blank(ctx)
@@ -680,7 +684,7 @@ end
 
 --- Render an element subtree to markdown.
 ---@param node table
----@param opts? {base?: string, title?: string, resolve?: fun(href: string): string|nil}
+---@param opts? {base?: string, title?: string, lang?: string, resolve?: fun(href: string): string|nil}
 ---@return rtfm.Rendered
 function M.render(node, opts)
   opts = opts or {}
@@ -688,6 +692,7 @@ function M.render(node, opts)
   ctx.base = opts.base
   ctx.page = opts.base and urllib.strip_fragment(opts.base)
   ctx.resolve = opts.resolve
+  ctx.lang = opts.lang
   if BLOCK[node.tag] or node.type == "root" then
     blocks(node, ctx)
   else
