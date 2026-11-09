@@ -1,0 +1,137 @@
+local P = require("rtfm.html.parser")
+local E = require("rtfm.html.extract")
+local Md = require("rtfm.html.markdown")
+
+local function md(html, opts)
+  return Md.render(P.parse(html), opts or {})
+end
+
+describe("parser", function()
+  it("decodes entities", function()
+    eq("a & b < c © — ’ é 😀", P.decode_entities("a &amp; b &lt; c &copy; &mdash; &rsquo; &#233; &#x1F600;"))
+    eq("&unknown;", P.decode_entities("&unknown;"))
+  end)
+
+  it("handles implied closes and void elements", function()
+    local root = P.parse("<ul><li>one<li>two</ul><p>a<p>b<br>c")
+    eq(2, #P.select(root, "li"))
+    eq(2, #P.select(root, "p"))
+    eq("two", P.clean_text(P.select(root, "li")[2]))
+  end)
+
+  it("skips scripts and comments", function()
+    local root = P.parse("<div>a<script>var x = '<div>';</script><!-- <p>no</p> -->b</div>")
+    eq("ab", P.clean_text(P.select_one(root, "div")))
+  end)
+
+  it("selects with compound and descendant selectors", function()
+    local root = P.parse([[<div class="a b" id="x"><span data-k="v">1</span></div><div class="a"><a href="/h">2</a></div>]])
+    eq(2, #P.select(root, "div.a"))
+    eq("x", P.select_one(root, "div.a.b").attrs.id)
+    eq("1", P.clean_text(P.select_one(root, "span[data-k=v]")))
+    eq("2", P.clean_text(P.select_one(root, "div.a a[href]")))
+    eq("/h", P.select_one(root, "a[href^=/]").attrs.href)
+  end)
+
+  it("tolerates broken markup", function()
+    local root = P.parse("<div><p>unclosed <b>bold</div></i><p>after")
+    ok(root)
+    contains(P.text(root), "after")
+  end)
+end)
+
+describe("markdown", function()
+  it("renders headings, paragraphs and inline formatting", function()
+    local r = md("<h2 id='x'>Title <a class='headerlink'>¶</a></h2><p>Some <strong>bold</strong> and <em>it</em> and <code>co`de</code>.</p>")
+    eq("## Title", r.lines[1])
+    eq("Some **bold** and *it* and ``co`de``.", r.lines[3])
+    eq(1, r.anchors.x)
+  end)
+
+  it("renders code blocks with languages", function()
+    local r = md([[<pre data-language="go">func main() {
+	fmt.Println("hi")
+}</pre><div class="highlight-python"><pre>x = 1</pre></div><pre><code class="language-rust">let x = 1;</code></pre>]])
+    contains(r.lines, "```go\nfunc main() {\n\tfmt.Println(\"hi\")\n}\n```")
+    contains(r.lines, "```python\nx = 1\n```")
+    contains(r.lines, "```rust\nlet x = 1;\n```")
+  end)
+
+  it("uses the default language for unlabeled code", function()
+    local r = Md.render(P.parse("<pre>x := 1</pre>"), { lang = "go" })
+    eq("```go", r.lines[1])
+  end)
+
+  it("renders nested lists tightly", function()
+    local r = md("<ul><li>a<ul><li>b</li></ul></li><li>c</li></ul><ol start='3'><li>x</li><li>y</li></ol>")
+    eq({ "- a", "  - b", "- c", "", "3. x", "4. y" }, r.lines)
+  end)
+
+  it("renders tables", function()
+    local r = md("<table><thead><tr><th>Name</th><th>Desc</th></tr></thead><tbody><tr><td>a|b</td><td>x</td></tr></tbody></table>")
+    eq("| Name | Desc |", r.lines[1])
+    eq("| ---- | ---- |", r.lines[2])
+    eq("| a\\|b | x    |", r.lines[3])
+  end)
+
+  it("makes links absolute and in-page links relative", function()
+    local r = Md.render(P.parse([[<p><a href="../x/y">rel</a> <a href="#frag">same</a> <a href="https://devdocs.io/go/context/index#Z">self</a></p>]]), { base = "https://devdocs.io/go/context/index" })
+    eq("[rel](https://devdocs.io/go/x/y) [same](#frag) [self](#Z)", r.lines[1])
+  end)
+
+  it("renders definition lists and sphinx signatures", function()
+    local r = md([[<dl class="py function"><dt class="sig sig-object py" id="json.dumps">json.dumps(obj)</dt><dd><p>Serialize.</p></dd></dl><dl><dt>term</dt><dd>def</dd></dl>]])
+    eq("#### `json.dumps(obj)`", r.lines[1])
+    eq("  Serialize.", r.lines[3])
+    eq(1, r.anchors["json.dumps"])
+    contains(r.lines, "**term**")
+  end)
+
+  it("renders admonitions as quotes", function()
+    local r = md([[<div class="admonition note"><p class="admonition-title">Note</p><p>Careful.</p></div>]])
+    eq({ "> Note", ">", "> Careful." }, r.lines)
+  end)
+
+  it("prepends the title when missing", function()
+    local r = Md.render(P.parse("<p>body</p>"), { title = "Page" })
+    eq({ "# Page", "", "body" }, r.lines)
+  end)
+
+  it("handles markdown sources", function()
+    local r = Md.from_markdown("# Hello World\n\nSee [x](/en/foo) and [y](#hello-world).\n\n```\n# not a heading\n```", { base = "https://docs.github.com/en/bar" })
+    eq("See [x](https://docs.github.com/en/foo) and [y](#hello-world).", r.lines[3])
+    eq(1, r.anchors["hello-world"])
+    eq(nil, r.anchors["not-a-heading"])
+  end)
+end)
+
+describe("extract", function()
+  it("finds main content and drops chrome", function()
+    local html = [[<html><head><title>Fetch API - Web APIs | MDN</title></head><body>
+      <nav>menu</nav><header>site</header>
+      <main><article class="main-page-content"><h1>Fetch API</h1>
+      <div class="sidebar">side</div><p>]] .. ("Real content. "):rep(30) .. [[</p></article></main>
+      <footer>foot</footer></body></html>]]
+    local node, title = E.extract(P.parse(html))
+    eq("Fetch API", title)
+    local text = P.text(node)
+    contains(text, "Real content")
+    ok(not text:find("menu") and not text:find("side") and not text:find("foot"), "chrome removed")
+  end)
+end)
+
+describe("real pages", function()
+  it("renders devdocs go/context with anchors", function()
+    local r = Md.render(P.parse(fixture("devdocs_go_context.html")), { base = "https://devdocs.io/go/context/index", lang = "go" })
+    eq("# Package context", r.lines[1])
+    ok(r.anchors.WithCancel, "WithCancel anchor")
+    contains(r.lines[r.anchors.WithTimeout], "WithTimeout")
+    contains(r.lines, "```go")
+  end)
+
+  it("renders devdocs python/json", function()
+    local r = Md.render(P.parse(fixture("devdocs_python_json.html")), { base = "https://devdocs.io/python~3.13/library/json" })
+    contains(r.lines[r.anchors["json.dumps"]], "json.dumps(obj")
+    contains(r.lines, "```python")
+  end)
+end)

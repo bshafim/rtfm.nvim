@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://docs.example.dev/</loc></url>
+  <url><loc>https://docs.example.dev/guide/getting-started/</loc></url>
+  <url><loc>https://docs.example.dev/guide/build_and_deploy.html</loc></url>
+  <url><loc>https://docs.example.dev/reference/cli/run/</loc></url>
+  <url><loc>https://docs.example.dev/blog/2024-release/</loc></url>
+</urlset>

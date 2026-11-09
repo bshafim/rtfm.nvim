@@ -1,0 +1,235 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="List of all items in this crate"><title>List of all items in this crate</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="/-/rustdoc.static/${f}">`).join(""))</script><link rel="stylesheet" href="/-/rustdoc.static/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="/-/static/v/c6adc0736ae17c7d/vendored.css" media="all" /><link rel="stylesheet" href="/-/rustdoc.static/rustdoc-b21aa549bf6d91ff.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="/-/rustdoc.static/" data-current-crate="serde" data-themes="" data-resource-suffix="-20240430-1.80.0-nightly-f705de596" data-rustdoc-version="1.80.0-nightly (f705de596 2024-04-30)" data-channel="nightly" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="/-/rustdoc.static/storage-e32f0c247825364d.js"></script><script defer src="/-/rustdoc.static/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="/-/rustdoc.static/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="/-/rustdoc.static/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="/-/rustdoc.static/favicon-2c020d218678b618.svg"><link rel="stylesheet" href="/-/static/v/c6adc0736ae17c7d/rustdoc-2021-12-05.css" media="all" /><link rel="stylesheet" href="/-/static/v/c6adc0736ae17c7d/font-awesome.css" media="all" />
+
+<link rel="search" href="/-/static/v/c6adc0736ae17c7d/opensearch.xml" type="application/opensearchdescription+xml" title="Docs.rs" />
+
+<script type="text/javascript">(function() {
+    function applyTheme(theme) {
+        if (theme) {
+            document.documentElement.dataset.docsRsTheme = theme;
+        }
+    }
+
+    window.addEventListener("storage", ev => {
+        if (ev.key === "rustdoc-theme") {
+            applyTheme(ev.newValue);
+        }
+    });
+
+    // see ./storage-change-detection.html for details
+    window.addEventListener("message", ev => {
+        if (ev.data && ev.data.storage && ev.data.storage.key === "rustdoc-theme") {
+            applyTheme(ev.data.storage.value);
+        }
+    });
+
+    applyTheme(window.localStorage.getItem("rustdoc-theme"));
+})();</script></head><body class="rustdoc-page">
+<div class="nav-container">
+    <div class="container">
+        <div class="pure-menu pure-menu-horizontal" role="navigation" aria-label="Main navigation">
+            <form action="/releases/search"
+                  method="GET"
+                  id="nav-search-form"
+                  class="landing-search-form-nav not-latest ">
+
+                
+                <a href="/" class="pure-menu-heading pure-menu-link docsrs-logo" aria-label="Docs.rs">
+                    <span title="Docs.rs"><span class="fa fa-solid fa-cubes " aria-hidden="true"></span></span>
+                    <span class="title">Docs.rs</span>
+                </a><ul class="pure-menu-list">
+    <script id="crate-metadata" type="application/json">
+        
+        {
+            "name": "serde",
+            "version": "1.0.200"
+        }
+    </script><li class="pure-menu-item pure-menu-has-children crate-dropdown">
+            <a href="#" class="pure-menu-link crate-name" title="A generic serialization/deserialization framework">
+                <span class="fa fa-solid fa-cube " aria-hidden="true"></span>
+                <span class="title">serde-1.0.200</span>
+            </a><div class="pure-menu-children package-details-menu">
+                
+                <ul class="pure-menu-list menu-item-divided">
+                    <li class="pure-menu-heading" id="crate-title">
+                        serde 1.0.200
+                        <span id="clipboard" class="svg-clipboard" title="Copy crate name and version information"></span>
+                    </li><li class="pure-menu-item">
+                        <a href="/crate/serde/1.0.200" class="pure-menu-link description" title="See serde in docs.rs">
+                            <span class="fa fa-solid fa-cube " aria-hidden="true"></span> Docs.rs crate page
+                        </a>
+                    </li><li class="pure-menu-item">
+                            <span class="pure-menu-link description license"><span class="fa fa-solid fa-scale-unbalanced-flip " aria-hidden="true"></span>
+                            <a href="https://spdx.org/licenses/MIT" class="pure-menu-sublink">MIT</a> OR <a href="https://spdx.org/licenses/Apache-2.0" class="pure-menu-sublink">Apache-2.0</a></span>
+                        </li><li class="pure-menu-item">
+                            <span class="pure-menu-link description" title="Built with rustc 1.80.0-nightly (f705de596 2024-04-30)">
+                                <span class="fa fa-solid fa-gears " aria-hidden="true"></span> 01 May 2024
+                            </span>
+                        </li></ul>
+
+                <div class="pure-g menu-item-divided">
+                    <div class="pure-u-1-2 right-border">
+                        <ul class="pure-menu-list">
+                            <li class="pure-menu-heading">Links</li>
+
+                            <li class="pure-menu-item">
+                                    <a href="https://serde.rs" class="pure-menu-link">
+                                        <span class="fa fa-solid fa-house " aria-hidden="true"></span> Homepage
+                                    </a>
+                                </li><li class="pure-menu-item">
+                                    <a href="https://github.com/serde-rs/serde" class="pure-menu-link">
+                                        <span class="fa fa-solid fa-code-branch " aria-hidden="true"></span> Repository
+                                    </a>
+                                </li><li class="pure-menu-item">
+                                <a href="https://crates.io/crates/serde" class="pure-menu-link" title="See serde in crates.io">
+                                    <span class="fa fa-solid fa-cube " aria-hidden="true"></span> crates.io
+                                </a>
+                            </li>
+
+                            
+                            <li class="pure-menu-item">
+                                <a href="/crate/serde/1.0.200/source/" title="Browse source of serde-1.0.200" class="pure-menu-link">
+                                    <span class="fa fa-solid fa-folder-open " aria-hidden="true"></span> Source
+                                </a>
+                            </li>
+                        </ul>
+                    </div><div class="pure-u-1-2">
+                        <ul class="pure-menu-list" id="topbar-owners">
+                            <li class="pure-menu-heading">Owners</li><li class="pure-menu-item">
+                                    <a href="https://crates.io/users/dtolnay" class="pure-menu-link">
+                                        <span class="fa fa-solid fa-user " aria-hidden="true"></span> dtolnay
+                                    </a>
+                                </li><li class="pure-menu-item">
+                                    <a href="https://crates.io/teams/github:serde-rs:publish" class="pure-menu-link">
+                                        <span class="fa fa-solid fa-user " aria-hidden="true"></span> github:serde-rs:publish
+                                    </a>
+                                </li></ul>
+                    </div>
+                </div>
+
+                <div class="pure-g menu-item-divided">
+                    <div class="pure-u-1-2 right-border">
+                        <ul class="pure-menu-list">
+                            <li class="pure-menu-heading">Dependencies</li>
+
+                            
+                            <li class="pure-menu-item">
+                                <div class="pure-menu pure-menu-scrollable sub-menu" tabindex="-1">
+                                    <ul class="pure-menu-list">
+                                        <li class="pure-menu-item"><a href="/serde_derive/^1/" class="pure-menu-link">
+                serde_derive ^1
+                
+                    <i class="dependencies normal">normal</i>
+                    
+                        <i>optional</i>
+                    
+                
+            </a>
+        </li><li class="pure-menu-item"><a href="/serde_derive/^1/" class="pure-menu-link">
+                serde_derive ^1
+                
+                    <i class="dependencies dev">dev</i>
+                    
+                
+            </a>
+        </li><li class="pure-menu-item"><a href="/serde_derive/=1.0.200/" class="pure-menu-link">
+                serde_derive =1.0.200
+                
+                    <i class="dependencies normal">normal</i>
+                    
+                
+            </a>
+        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="pure-u-1-2">
+                        <ul class="pure-menu-list">
+                            <li class="pure-menu-heading">Versions</li>
+
+                            <li class="pure-menu-item">
+                                <div class="pure-menu pure-menu-scrollable sub-menu" id="releases-list" tabindex="-1" data-url="/crate/serde/1.0.200/menus/releases/serde/all.html">
+                                    <span class="rotate"><span class="fa fa-solid fa-spinner " aria-hidden="true"></span></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div></div>
+        </li>
+        <li class="pure-menu-item">
+            <a href="/crate/serde/latest/target-redirect/serde/all.html" class="pure-menu-link warn"
+                data-fragment="retain"
+                title="You are seeing an outdated version of the serde crate. Click here to go to the latest version.">
+                <span class="fa fa-solid fa-triangle-exclamation " aria-hidden="true"></span>
+                <span class="title">Go to latest version</span>
+            </a>
+        </li><li class="pure-menu-item pure-menu-has-children">
+                <a href="#" class="pure-menu-link" aria-label="Platform">
+                    <span class="fa fa-solid fa-gears " aria-hidden="true"></span>
+                    <span class="title">Platform</span>
+                </a>
+
+                
+                <ul class="pure-menu-children" id="platforms" data-url="/crate/serde/1.0.200/menus/platforms/serde/all.html"><li class="pure-menu-item">
+            <a href="/crate/serde/1.0.200/target-redirect/serde/all.html" class="pure-menu-link" data-fragment="retain" rel="nofollow">x86_64-unknown-linux-gnu</a>
+        </li></ul>
+            </li><li class="pure-menu-item">
+                <a href="/crate/serde/1.0.200/features" title="Browse available feature flags of serde-1.0.200" class="pure-menu-link">
+                    <span class="fa fa-solid fa-flag " aria-hidden="true"></span>
+                    <span class="title">Feature flags</span>
+                </a>
+            </li>
+        
+    
+    <li id="crate-warnings" class="pure-menu-item hidden" data-url="/-/partial/crate-warnings/serde/"></li>
+</ul><div class="spacer"></div>
+                
+                <div id="abnormalities" class="hidden"></div>
+
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-item pure-menu-has-children">
+                        <a href="#" class="pure-menu-link" aria-label="docs.rs">docs.rs</a>
+                        <ul class="pure-menu-children aligned-icons"><li class="pure-menu-item"><a class="pure-menu-link" href="/about"><span class="fa fa-solid fa-circle-info " aria-hidden="true"></span> About docs.rs</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="/about/badges"><span class="fa fa-brands fa-fonticons " aria-hidden="true"></span> Badges</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="/about/builds"><span class="fa fa-solid fa-gears " aria-hidden="true"></span> Builds</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="/about/metadata"><span class="fa fa-solid fa-table " aria-hidden="true"></span> Metadata</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="/about/redirections"><span class="fa fa-solid fa-road " aria-hidden="true"></span> Shorthand URLs</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="/about/download"><span class="fa fa-solid fa-download " aria-hidden="true"></span> Download</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="/about/rustdoc-json"><span class="fa fa-solid fa-file-code " aria-hidden="true"></span> Rustdoc JSON</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="/releases/queue"><span class="fa fa-solid fa-gears " aria-hidden="true"></span> Build queue</a></li><li class="pure-menu-item"><a class="pure-menu-link" href="https://foundation.rust-lang.org/policies/privacy-policy/#docs.rs" target="_blank"><span class="fa fa-solid fa-shield-halved " aria-hidden="true"></span> Privacy policy</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="pure-menu-list"><li class="pure-menu-item pure-menu-has-children">
+                        <a href="#" class="pure-menu-link" aria-label="Rust">Rust</a>
+                        <ul class="pure-menu-children">
+                            <li class="pure-menu-item"><a class="pure-menu-link" href="https://www.rust-lang.org/" target="_blank">Rust website</a></li>
+                            <li class="pure-menu-item"><a class="pure-menu-link" href="https://doc.rust-lang.org/book/" target="_blank">The Book</a></li>
+
+                            <li class="pure-menu-item"><a class="pure-menu-link" href="https://doc.rust-lang.org/std/" target="_blank">Standard Library API Reference</a></li>
+
+                            <li class="pure-menu-item"><a class="pure-menu-link" href="https://doc.rust-lang.org/rust-by-example/" target="_blank">Rust by Example</a></li>
+
+                            <li class="pure-menu-item"><a class="pure-menu-link" href="https://doc.rust-lang.org/cargo/guide/" target="_blank">The Cargo Guide</a></li>
+
+                            <li class="pure-menu-item"><a class="pure-menu-link" href="https://doc.rust-lang.org/nightly/clippy" target="_blank">Clippy Documentation</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <div id="search-input-nav">
+                    <label for="nav-search">
+                        <span class="fa fa-solid fa-magnifying-glass " aria-hidden="true"></span>
+                    </label>
+
+                    
+                    
+                    <input id="nav-search" name="query" type="text" aria-label="Find crate by search query" tabindex="-1"
+                        placeholder="Find crate"
+                        >
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div id="alerts" class="hidden"></div><div class="rustdoc mod sys container-rustdoc" id="rustdoc_body_wrapper" tabindex="-1"><script async src="/-/static/v/c6adc0736ae17c7d/menu.js"></script>
+<script async src="/-/static/v/c6adc0736ae17c7d/index.js"></script>
+
+<iframe src="/-/storage-change-detection.html" width="0" height="0" style="display: none"></iframe><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../serde/index.html">serde</a><span class="version">1.0.200</span></h2></div><div class="sidebar-elems"><section><ul class="block"><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#derives">Derive Macros</a></li></ul></section></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../serde/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><h1>List of all items</h1><h3 id="structs">Structs</h3><ul class="all-items"><li><a href="de/struct.IgnoredAny.html">de::IgnoredAny</a></li><li><a href="de/value/struct.BoolDeserializer.html">de::value::BoolDeserializer</a></li><li><a href="de/value/struct.BorrowedBytesDeserializer.html">de::value::BorrowedBytesDeserializer</a></li><li><a href="de/value/struct.BorrowedStrDeserializer.html">de::value::BorrowedStrDeserializer</a></li><li><a href="de/value/struct.BytesDeserializer.html">de::value::BytesDeserializer</a></li><li><a href="de/value/struct.CharDeserializer.html">de::value::CharDeserializer</a></li><li><a href="de/value/struct.CowStrDeserializer.html">de::value::CowStrDeserializer</a></li><li><a href="de/value/struct.EnumAccessDeserializer.html">de::value::EnumAccessDeserializer</a></li><li><a href="de/value/struct.Error.html">de::value::Error</a></li><li><a href="de/value/struct.F32Deserializer.html">de::value::F32Deserializer</a></li><li><a href="de/value/struct.F64Deserializer.html">de::value::F64Deserializer</a></li><li><a href="de/value/struct.I128Deserializer.html">de::value::I128Deserializer</a></li><li><a href="de/value/struct.I16Deserializer.html">de::value::I16Deserializer</a></li><li><a href="de/value/struct.I32Deserializer.html">de::value::I32Deserializer</a></li><li><a href="de/value/struct.I64Deserializer.html">de::value::I64Deserializer</a></li><li><a href="de/value/struct.I8Deserializer.html">de::value::I8Deserializer</a></li><li><a href="de/value/struct.IsizeDeserializer.html">de::value::IsizeDeserializer</a></li><li><a href="de/value/struct.MapAccessDeserializer.html">de::value::MapAccessDeserializer</a></li><li><a href="de/value/struct.MapDeserializer.html">de::value::MapDeserializer</a></li><li><a href="de/value/struct.NeverDeserializer.html">de::value::NeverDeserializer</a></li><li><a href="de/value/struct.SeqAccessDeserializer.html">de::value::SeqAccessDeserializer</a></li><li><a href="de/value/struct.SeqDeserializer.html">de::value::SeqDeserializer</a></li><li><a href="de/value/struct.StrDeserializer.html">de::value::StrDeserializer</a></li><li><a href="de/value/struct.StringDeserializer.html">de::value::StringDeserializer</a></li><li><a href="de/value/struct.U128Deserializer.html">de::value::U128Deserializer</a></li><li><a href="de/value/struct.U16Deserializer.html">de::value::U16Deserializer</a></li><li><a href="de/value/struct.U32Deserializer.html">de::value::U32Deserializer</a></li><li><a href="de/value/struct.U64Deserializer.html">de::value::U64Deserializer</a></li><li><a href="de/value/struct.U8Deserializer.html">de::value::U8Deserializer</a></li><li><a href="de/value/struct.UnitDeserializer.html">de::value::UnitDeserializer</a></li><li><a href="de/value/struct.UsizeDeserializer.html">de::value::UsizeDeserializer</a></li><li><a href="ser/struct.Impossible.html">ser::Impossible</a></li></ul><h3 id="enums">Enums</h3><ul class="all-items"><li><a href="de/enum.Unexpected.html">de::Unexpected</a></li></ul><h3 id="traits">Traits</h3><ul class="all-items"><li><a href="trait.Deserialize.html">Deserialize</a></li><li><a href="trait.Deserializer.html">Deserializer</a></li><li><a href="trait.Serialize.html">Serialize</a></li><li><a href="trait.Serializer.html">Serializer</a></li><li><a href="de/trait.Deserialize.html">de::Deserialize</a></li><li><a href="de/trait.DeserializeOwned.html">de::DeserializeOwned</a></li><li><a href="de/trait.DeserializeSeed.html">de::DeserializeSeed</a></li><li><a href="de/trait.Deserializer.html">de::Deserializer</a></li><li><a href="de/trait.EnumAccess.html">de::EnumAccess</a></li><li><a href="de/trait.Error.html">de::Error</a></li><li><a href="de/trait.Expected.html">de::Expected</a></li><li><a href="de/trait.IntoDeserializer.html">de::IntoDeserializer</a></li><li><a href="de/trait.MapAccess.html">de::MapAccess</a></li><li><a href="de/trait.SeqAccess.html">de::SeqAccess</a></li><li><a href="de/trait.VariantAccess.html">de::VariantAccess</a></li><li><a href="de/trait.Visitor.html">de::Visitor</a></li><li><a href="ser/trait.Error.html">ser::Error</a></li><li><a href="ser/trait.Serialize.html">ser::Serialize</a></li><li><a href="ser/trait.SerializeMap.html">ser::SerializeMap</a></li><li><a href="ser/trait.SerializeSeq.html">ser::SerializeSeq</a></li><li><a href="ser/trait.SerializeStruct.html">ser::SerializeStruct</a></li><li><a href="ser/trait.SerializeStructVariant.html">ser::SerializeStructVariant</a></li><li><a href="ser/trait.SerializeTuple.html">ser::SerializeTuple</a></li><li><a href="ser/trait.SerializeTupleStruct.html">ser::SerializeTupleStruct</a></li><li><a href="ser/trait.SerializeTupleVariant.html">ser::SerializeTupleVariant</a></li><li><a href="ser/trait.Serializer.html">ser::Serializer</a></li></ul><h3 id="macros">Macros</h3><ul class="all-items"><li><a href="macro.forward_to_deserialize_any.html">forward_to_deserialize_any</a></li></ul><h3 id="derives">Derive Macros</h3><ul class="all-items"><li><a href="derive.Deserialize.html">Deserialize</a></li><li><a href="derive.Serialize.html">Serialize</a></li></ul></section></div></main></div></body></html>

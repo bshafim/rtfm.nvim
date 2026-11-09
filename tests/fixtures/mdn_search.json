@@ -1,0 +1,61 @@
+{
+ "documents": [
+  {
+   "mdn_url": "/en-US/docs/Web/API/Fetch_API",
+   "score": 43.790318,
+   "title": "Fetch API",
+   "locale": "en-us",
+   "slug": "web/api/fetch_api",
+   "popularity": 0.12247126190169688,
+   "summary": "The Fetch API provides an interface for fetching resources (including across the network). It is a more powerful and flexible replacement for XMLHttpRequest.",
+   "highlight": {
+    "body": [
+     "Find out more about using the <mark>Fetch</mark> API features in Using <mark>Fetch</mark>.",
+     "See Using Deferred <mark>Fetch</mark>.\nWindow.<mark>fetch</mark>() and WorkerGlobalScope.<mark>fetch</mark>()\nThe <mark>fetch</mark>() method used to <mark>fetch</mark> a resource.",
+     "Window.<mark>fetch</mark>Later()\nUsed to make a deferred <mark>fetch</mark> request."
+    ],
+    "title": [
+     "<mark>Fetch</mark> API"
+    ]
+   }
+  },
+  {
+   "mdn_url": "/en-US/docs/Web/API/BackgroundFetchManager/fetch",
+   "score": 43.715904,
+   "title": "BackgroundFetchManager: fetch() method",
+   "locale": "en-us",
+   "slug": "web/api/backgroundfetchmanager/fetch",
+   "popularity": 0.0008057633535012563,
+   "summary": "The fetch() method of the BackgroundFetchManager interface initiates a background fetch operation, given one or more URLs or Request objects.",
+   "highlight": {
+    "body": [
+     "The <mark>fetch</mark>() method of the Background<mark>Fetch</mark>Manager interface initiates a background <mark>fetch</mark> operation, given one or more URLs",
+     "The following example shows how to use <mark>fetch</mark>() to initiate a background <mark>fetch</mark> operation.",
+     "object and call its <mark>fetch</mark>()\nmethod.\njsnavigator.serviceWorker.ready.then(async (swReg) =&gt; {\nconst bg<mark>Fetch</mark> = await swReg.background<mark>Fetch</mark>.<mark>fetch</mark>"
+    ],
+    "title": [
+     "Background<mark>Fetch</mark>Manager: <mark>fetch</mark>() method"
+    ]
+   }
+  },
+  {
+   "mdn_url": "/en-US/docs/Web/API/FetchEvent/FetchEvent",
+   "score": 43.507145,
+   "title": "FetchEvent: FetchEvent() constructor",
+   "locale": "en-us",
+   "slug": "web/api/fetchevent/fetchevent",
+   "popularity": 0.0014541883006975336,
+   "summary": "The FetchEvent() constructor creates a new FetchEvent object.",
+   "highlight": {
+    "body": [
+     "The <mark>Fetch</mark>Event() constructor creates a new <mark>Fetch</mark>Event object.\njsnew <mark>Fetch</mark>Event(type, options)\ntype\nA string with the name",
+     "It is case-sensitive and browsers always set it to <mark>fetch</mark>.\noptions\nAn object that, in addition of the properties defined in",
+     "A new <mark>Fetch</mark>Event object.\nPromise\n<mark>Fetch</mark> API"
+    ],
+    "title": [
+     "<mark>Fetch</mark>Event: <mark>Fetch</mark>Event() constructor"
+    ]
+   }
+  }
+ ]
+}

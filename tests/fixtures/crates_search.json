@@ -1,0 +1,16 @@
+{
+ "crates": [
+  {
+   "name": "serde",
+   "max_version": "1.0.229",
+   "max_stable_version": "1.0.229",
+   "description": "A generic serialization/deserialization framework"
+  },
+  {
+   "name": "serde-saphyr",
+   "max_version": "2.1.1",
+   "max_stable_version": "2.1.1",
+   "description": "YAML (de)serializer for Serde, emphasizing panic-free parsing, fast builds and good error reporting. Supports properties, include, tag and comment capture"
+  }
+ ]
+}

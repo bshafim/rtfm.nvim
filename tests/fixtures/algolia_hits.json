@@ -1,0 +1,22 @@
+{
+  "hits": [
+    {
+      "url": "https://docs.example.dev/guide/routing#dynamic-routes",
+      "type": "lvl2",
+      "hierarchy": { "lvl0": "Guide", "lvl1": "Routing", "lvl2": "Dynamic <em>routes</em>", "lvl3": null },
+      "content": null
+    },
+    {
+      "url": "https://docs.example.dev/guide/routing#dynamic-routes",
+      "type": "content",
+      "hierarchy": { "lvl0": "Guide", "lvl1": "Routing", "lvl2": "Dynamic routes" },
+      "content": "Use <em>brackets</em> to define a dynamic segment."
+    },
+    {
+      "url": "https://docs.example.dev/api/router",
+      "type": "lvl1",
+      "hierarchy": { "lvl0": "API", "lvl1": "Router" },
+      "content": null
+    }
+  ]
+}

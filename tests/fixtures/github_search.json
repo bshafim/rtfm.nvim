@@ -1,0 +1,67 @@
+{
+ "meta": {
+  "found": {
+   "value": 1254,
+   "relation": "eq"
+  },
+  "took": {
+   "query_msec": 18,
+   "total_msec": 32
+  },
+  "page": 1,
+  "size": 3
+ },
+ "hits": [
+  {
+   "id": "/en/rest/actions/cache",
+   "url": "/en/rest/actions/cache",
+   "title": "REST API endpoints for GitHub Actions cache",
+   "breadcrumbs": "REST API / Actions",
+   "highlights": {
+    "title": [
+     "REST API endpoints for GitHub <mark>Actions cache</mark>"
+    ],
+    "content": [
+     "for GitHub <mark>Actions</mark> <mark>cache</mark>\nUse the REST API to interact with the <mark>cache</mark> for repositories in GitHub <mark>Actions</mark>.\nAbout the <mark>cache</mark> in GitHub <mark>Actions</mark>\nYou can use"
+    ],
+    "content_explicit": [
+     "for GitHub <mark>Actions</mark> <mark>cache</mark>\nUse the REST API to interact with the <mark>cache</mark> for repositories in GitHub <mark>Actions</mark>.\nAbout the <mark>cache</mark> in GitHub <mark>Actions</mark>\nYou can use"
+    ]
+   }
+  },
+  {
+   "id": "/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization",
+   "url": "/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization",
+   "title": "Disabling or limiting GitHub Actions for your organization",
+   "breadcrumbs": "Organizations / Manage organization settings",
+   "highlights": {
+    "title": [
+     "Disabling or limiting GitHub <mark>Actions</mark> for your organization"
+    ],
+    "content": [
+     "limiting GitHub <mark>Actions</mark> for your organization\nYou can enable, disable, and limit GitHub <mark>Actions</mark> for an organization.\nAbout GitHub <mark>Actions</mark> permissions for"
+    ],
+    "content_explicit": [
+     "limiting GitHub <mark>Actions</mark> for your organization\nYou can enable, disable, and limit GitHub <mark>Actions</mark> for an organization.\nAbout GitHub <mark>Actions</mark> permissions for"
+    ]
+   }
+  },
+  {
+   "id": "/en/actions/reference/workflows-and-actions/dependency-caching",
+   "url": "/en/actions/reference/workflows-and-actions/dependency-caching",
+   "title": "Dependency caching reference",
+   "breadcrumbs": "GitHub Actions / Reference / Workflows and actions",
+   "highlights": {
+    "title": [
+     "Dependency <mark>caching</mark> reference"
+    ],
+    "content": [
+     "Dependency <mark>caching</mark> reference\nFind information on the functionality of dependency <mark>caching</mark> in workflows.\n<mark>cache</mark> <mark>action</mark> usage\nThe <mark>cache</mark> <mark>action</mark> will attempt"
+    ],
+    "content_explicit": [
+     "dependency caching in workflows.\n<mark>cache</mark> action usage\nThe <mark>cache</mark> action will attempt the following sequence when restoring a <mark>cache</mark>:\nFirst, it searches for an exact"
+    ]
+   }
+  }
+ ]
+}
