@@ -232,7 +232,7 @@ require("rtfm").set_offline(bool)
 12. HIGHLIGHTS AND EVENTS                                    *rtfm-highlights*
 
 RtfmNormal RtfmBorder RtfmTitle RtfmFooter RtfmChip RtfmPrompt RtfmMatch
-RtfmKind RtfmSelection RtfmFavorite RtfmProject RtfmInstalled RtfmSemantic
+RtfmKind RtfmSelection RtfmCaret RtfmFavorite RtfmProject RtfmInstalled RtfmSemantic
 RtfmFlash
 
                                                              *RtfmPageOpen*
