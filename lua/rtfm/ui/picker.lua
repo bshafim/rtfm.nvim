@@ -217,6 +217,7 @@ local function set_preview(lines, opts)
   vim.bo[buf].modifiable = true
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].modifiable = false
+  pcall(vim.api.nvim_exec_autocmds, "TextChanged", { buffer = buf, modeline = false })
   if valid(P.wins.preview) then
     local line = math.max(1, math.min(opts.line or 1, #lines))
     vim.api.nvim_win_set_cursor(P.wins.preview, { line, 0 })
@@ -506,6 +507,9 @@ local function render_prompt_decor()
 end
 
 local function set_query(text)
+  if not vim.api.nvim_buf_is_valid(P.bufs.prompt) then
+    return M.close()
+  end
   P.setting_query = true
   vim.api.nvim_buf_set_lines(P.bufs.prompt, 0, -1, false, { text or "" })
   vim.schedule(function()
@@ -755,8 +759,10 @@ local function create_windows()
   P.bufs.results = scratch()
   P.wins.results = vim.api.nvim_open_win(P.bufs.results, false, float_opts(geo.results, { focusable = false }))
   if geo.preview then
-    P.bufs.preview = scratch("markdown")
+    P.bufs.preview = scratch()
     P.wins.preview = vim.api.nvim_open_win(P.bufs.preview, false, float_opts(geo.preview, { focusable = false }))
+    -- set after the window exists so markdown renderers attach
+    vim.bo[P.bufs.preview].filetype = "markdown"
     vim.wo[P.wins.preview].wrap = true
     vim.wo[P.wins.preview].linebreak = true
     vim.wo[P.wins.preview].conceallevel = 2
@@ -850,6 +856,14 @@ function M.open(opts)
     end,
   })
   vim.api.nvim_create_autocmd("VimResized", { group = P.augroup, callback = relayout })
+  -- something else (a dashboard, a session plugin) wiped our buffer: close cleanly
+  vim.api.nvim_create_autocmd("BufWipeout", {
+    group = P.augroup,
+    buffer = P.bufs.prompt,
+    callback = function()
+      vim.schedule(M.close)
+    end,
+  })
 
   vim.cmd("startinsert")
 

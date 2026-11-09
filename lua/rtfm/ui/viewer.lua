@@ -107,6 +107,16 @@ local function set_lines(buf, lines)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].modifiable = false
   vim.bo[buf].modified = false
+  -- programmatic edits don't fire TextChanged; tell markdown renderers to redraw
+  pcall(vim.api.nvim_exec_autocmds, "TextChanged", { buffer = buf, modeline = false })
+end
+
+--- Show buf in win and make sure it has its filetype (after it's visible).
+local function show_buf(win, buf)
+  vim.api.nvim_win_set_buf(win, buf)
+  if vim.bo[buf].filetype ~= "markdown" then
+    vim.bo[buf].filetype = "markdown"
+  end
 end
 
 local setup_keymaps
@@ -118,7 +128,8 @@ local function create_buf(name)
   vim.bo[buf].bufhidden = "hide"
   vim.bo[buf].swapfile = false
   vim.b[buf].rtfm = true
-  vim.bo[buf].filetype = "markdown"
+  -- filetype is set once the buffer is in a window (see show_buf): renderers such as
+  -- render-markdown.nvim only attach to buffers that are visible when FileType fires
   setup_keymaps(buf)
   vim.api.nvim_create_autocmd("BufWipeout", {
     buffer = buf,
@@ -198,7 +209,7 @@ function M.open(source, item, opts)
   local fragment = item.fragment or (item.url and urllib.fragment(item.url))
 
   if buf and M.pages[buf] then
-    vim.api.nvim_win_set_buf(win, buf)
+    show_buf(win, buf)
     apply_win_opts(win)
     if opts.cursor then
       pcall(vim.api.nvim_win_set_cursor, win, opts.cursor)
@@ -214,7 +225,7 @@ function M.open(source, item, opts)
 
   buf = buf or create_buf(name)
   set_lines(buf, { "# " .. (item.title or "…"), "", "_Loading…_" })
-  vim.api.nvim_win_set_buf(win, buf)
+  show_buf(win, buf)
   apply_win_opts(win)
 
   page.load(source, item, function(err, p)
