@@ -187,7 +187,7 @@ function M.build(source, opts, cb)
           local c = chunks[j]
           texts[#texts + 1] = (c.h ~= "" and (c.h .. "\n") or "") .. c._text
         end
-        embed.embed(texts, function(eerr, vecs)
+        embed.embed_robust(texts, function(eerr, vecs)
           if eerr then
             -- keep what we have: BM25 still works
             meta.model, meta.dim, meta.embedded = embed.model_id(), dim, 0

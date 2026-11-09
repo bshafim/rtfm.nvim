@@ -71,6 +71,48 @@ function M.embed(texts, cb)
   end)
 end
 
+local function too_long(err)
+  return err and (err:find("context length", 1, true) or err:find("too long", 1, true) or err:find("maximum context", 1, true))
+end
+
+--- Embed for indexing: clips inputs, and when the server rejects a batch for length,
+--- retries each input on its own, shrinking it until the model accepts it.
+function M.embed_robust(texts, cb)
+  local max = opts().max_chars or 1000
+  local clipped = {}
+  for i, t in ipairs(texts) do
+    clipped[i] = #t > max and t:sub(1, max) or t
+  end
+  M.embed(clipped, function(err, vecs)
+    if not err or not too_long(err) then
+      return cb(err, vecs)
+    end
+    local out, i = {}, 0
+    local function next_one()
+      i = i + 1
+      if i > #clipped then
+        return cb(nil, out)
+      end
+      local text = clipped[i]
+      local function attempt()
+        M.embed({ text }, function(e, v)
+          if not e then
+            out[i] = v[1]
+            return next_one()
+          end
+          if too_long(e) and #text > 40 then
+            text = text:sub(1, math.floor(#text * 0.6))
+            return attempt()
+          end
+          cb(e)
+        end)
+      end
+      attempt()
+    end
+    next_one()
+  end)
+end
+
 --- Is the model server reachable? cb(ok, err)
 function M.check(cb)
   M.embed({ "ping" }, function(err, vecs)

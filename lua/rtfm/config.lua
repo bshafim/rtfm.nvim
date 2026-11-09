@@ -105,6 +105,8 @@ M.defaults = {
       url = nil, -- defaults: http://localhost:11434 (ollama), http://localhost:8080/v1 (openai)
       api_key = nil, -- for OpenAI-compatible servers that want one
       batch = 32,
+      -- inputs are clipped to this many characters; small models (all-minilm) only take 256 tokens
+      max_chars = 1000,
     },
     chunk_tokens = 300,
     -- queries with at least this many words go to hybrid/semantic search automatically

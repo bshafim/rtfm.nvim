@@ -95,7 +95,8 @@ function M.chunk(lines, anchors, opts)
           link_lines = link_lines + 1
         end
       end
-      if line ~= "" or #buf > 0 then
+      local is_fence = line:match("^%s*```") or line:match("^%s*~~~")
+      if not is_fence and (line ~= "" or #buf > 0) then
         table.insert(buf, clean(line))
         buf_tokens = buf_tokens + t
       end

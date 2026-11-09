@@ -76,7 +76,10 @@ function M.request(req, cb)
         body = stdout:sub(1, idx - 1)
       end
       if status >= 400 then
-        return cb(("HTTP %d for %s"):format(status, req.url), { status = status, body = body })
+        -- surface the server's own error message when it sends one
+        local detail = body:match('"error"%s*:%s*"([^"]+)"') or body:match('"message"%s*:%s*"([^"]+)"')
+        local msg = ("HTTP %d for %s"):format(status, req.url) .. (detail and (": " .. detail) or "")
+        return cb(msg, { status = status, body = body })
       end
       cb(nil, { status = status, body = body })
     end)
