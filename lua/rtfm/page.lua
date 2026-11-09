@@ -139,6 +139,14 @@ function M.anchor_line(page, fragment)
   if page.anchors[slug] then
     return page.anchors[slug]
   end
+  -- rustdoc: provided vs required trait methods
+  local alt = fragment:gsub("^method%.", "tymethod."):gsub("^tymethod%.", "method.")
+  if fragment:match("^method%.") then
+    alt = fragment:gsub("^method%.", "tymethod.")
+  end
+  if page.anchors[alt] then
+    return page.anchors[alt]
+  end
   local needle = fragment:lower():gsub("[-_]", " ")
   for i, line in ipairs(page.lines) do
     if line:match("^#+%s") and line:lower():gsub("[-_]", " "):find(needle, 1, true) then
