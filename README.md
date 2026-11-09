@@ -26,6 +26,13 @@ the exact version your project uses. There is a model in here, but it's a small 
 running on your own machine, and its only job is to help you *find* the right section. It never
 writes the answer for you. No API keys, nothing leaves your laptop, and it works on a plane.
 
+It also turned out to be a better way to learn. When you're new to a language or library, the
+hardest part is that you don't know what anything is called, so you can't search for it. You can
+ask rtfm in plain English, "how do I wait for multiple goroutines to finish", and instead of a
+ready-made answer you get the actual page for `sync.WaitGroup`: the explanation, the examples, the
+caveats, and links to everything around it. You come away knowing the name of the thing and where
+it lives, which is what makes the next question easier.
+
 Sometimes the most useful tool is the one that just helps you read the manual.
 
 ## See it
