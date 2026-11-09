@@ -1,0 +1,242 @@
+*rtfm.txt*  Read the docs without leaving Neovim
+
+==============================================================================
+CONTENTS                                                       *rtfm-contents*
+
+  1. Introduction .................................. |rtfm-intro|
+  2. Commands ...................................... |rtfm-commands|
+  3. Picker ........................................ |rtfm-picker|
+  4. Doc buffers ................................... |rtfm-viewer|
+  5. Sources ....................................... |rtfm-sources|
+  6. Version-aware docs ............................ |rtfm-project|
+  7. Symbol lookup ................................. |rtfm-symbol|
+  8. Semantic search ............................... |rtfm-semantic|
+  9. Offline ....................................... |rtfm-offline|
+ 10. Configuration ................................. |rtfm-config|
+ 11. Lua API ....................................... |rtfm-api|
+ 12. Highlights and events ......................... |rtfm-highlights|
+
+==============================================================================
+1. INTRODUCTION                                                   *rtfm-intro*
+
+rtfm.nvim searches documentation and renders pages as Markdown buffers. It
+knows which docs you need: the versions your project depends on, the symbol
+under the cursor, and (with a local embedding model) the answer to a
+question phrased in plain words. Everything works offline once installed.
+
+Requirements: Neovim 0.10+, curl. Optional: Ollama or another local
+embedding server, pandoc.
+
+==============================================================================
+2. COMMANDS                                                    *rtfm-commands*
+
+                                                                       *:Rtfm*
+:Rtfm                   Open the picker (project docs first).
+:Rtfm {source} [query]  Search {source}, e.g. `:Rtfm go context`.
+:Rtfm! {source} {query} Open the best match directly.
+:Rtfm symbol            Docs for the symbol under the cursor. |rtfm-symbol|
+:Rtfm ask [question]    Semantic search across all indexed docs.
+:Rtfm project           Pick from this project's docs.
+:Rtfm install {source}  Download {source} for offline use. With "project",
+                        installs and indexes every detected dependency.
+:Rtfm uninstall {source}
+:Rtfm installed         List installed docs.
+:Rtfm index {source}    Build the search index ("project" works too).
+:Rtfm bookmarks         Bookmarked pages. <C-x> deletes.
+:Rtfm history           Recently opened pages. <C-x> deletes.
+:Rtfm favorite [source] Toggle a favorite source.
+:Rtfm add {url} [name]  Add a docs site through its sitemap.xml.
+:Rtfm remove {id}       Remove a source added with :Rtfm add.
+:Rtfm url {url}         Render any web page.
+:Rtfm offline [on|off]  Toggle offline mode.
+:Rtfm cache clear       Clear the HTTP cache.
+
+Mappings: <Plug>(rtfm-symbol), <Plug>(rtfm-open), <Plug>(rtfm-ask). >lua
+    vim.keymap.set("n", "gK", "<Plug>(rtfm-symbol)")
+<
+==============================================================================
+3. PICKER                                                        *rtfm-picker*
+
+Type to filter sources, <Tab> or <CR> to pick one. The source becomes a chip
+in the prompt; type to search it. <BS> on an empty prompt returns to the
+source list. Marks: ⚑ project, ★ favorite, ● installed, ≈ semantic result.
+
+Insert-mode keys (|rtfm-config| `keymaps.picker`):
+  <CR>            open (in `open` mode)
+  <S-CR> <C-s>    open in a split
+  <C-v>           open in a vertical split
+  <C-t>           open in a tab
+  <C-y>           open in a float
+  <Tab>           pick source / next result
+  <C-n> <C-p>     next / previous
+  <C-d> <C-u>     scroll preview
+  <C-f>           toggle favorite
+  <C-b>           bookmark selected page
+  <C-e>           toggle semantic / keyword search
+  <C-g>           open in browser
+  <C-x>           delete entry (bookmarks, history)
+  <Esc> <C-c>     close
+
+==============================================================================
+4. DOC BUFFERS                                                   *rtfm-viewer*
+
+Pages open in |nofile| buffers named `rtfm://<source>/<page>` with
+'filetype' set to markdown. Normal-mode keys (`keymaps.viewer`):
+  <CR> gd     follow link (same site in rtfm, others in the browser)
+  <C-o> <C-i> back / forward through pages (falls back to the jumplist)
+  gO          table of contents in the location list
+  gx          open page in the browser
+  yu          yank the page URL
+  ma          bookmark with an optional note
+  gs          search the current source
+  q           close
+
+==============================================================================
+5. SOURCES                                                      *rtfm-sources*
+
+Builtin adapters:
+  devdocs   ~800 docs from devdocs.io. Ids are slugs: `go`, `python~3.12`.
+  gopkg     pkg.go.dev. `gopkg` searches everything; `gopkg:std@go1.22.0`
+            and `gopkg:<module>@<version>` list a module's packages.
+  docsrs    `docsrs` searches crates.io; `docsrs:<crate>@<version>` lists
+            every item of a crate version.
+  github    docs.github.com
+  mdn       developer.mozilla.org
+  sitemap   any site with a sitemap.xml: `{ adapter = "sitemap", url = ...,
+            include = "^/docs/", exclude = "...", selector = ".content" }`
+  algolia   Algolia DocSearch sites: `{ adapter = "algolia", app_id = ...,
+            api_key = ..., index = ..., params = {...} }`. You supply the
+            site's public search-only credentials.
+  web       any URL (`:Rtfm url`).
+
+Add sources in `setup({ sources = { id = spec } })`; set a builtin id to
+false to hide it.
+
+==============================================================================
+6. VERSION-AWARE DOCS                                           *rtfm-project*
+
+The project root is found from the current buffer (`project.markers`).
+rtfm reads:
+  go.mod                          Go version (toolchain wins), module deps
+  Cargo.toml, Cargo.lock          crate versions (lockfile wins)
+  package.json + package-lock.json / pnpm-lock.yaml / yarn.lock,
+  .nvmrc, .node-version           package and Node versions
+  pyproject.toml, requirements*.txt, uv.lock, poetry.lock,
+  .python-version, runtime.txt    package and Python versions
+
+Each dependency maps to a source at its version. For DevDocs, the newest
+doc version at or below the one in use is picked; the picker says when the
+match isn't exact. Results are cached and refreshed when a manifest changes.
+
+==============================================================================
+7. SYMBOL LOOKUP                                                 *rtfm-symbol*
+
+`:Rtfm symbol` resolves the symbol under the cursor:
+  1. LSP: `textDocument/definition` returns the defining file. Its path
+     gives the package and version: GOROOT (version from GOROOT/VERSION),
+     the Go module cache (`mod@version`), the Cargo registry
+     (`crate-version`), rustlib sources, site-packages (dist-info version),
+     the Python stdlib or typeshed, node_modules (package.json version).
+     The declaration line gives the anchor (`Client.Do`, `method.read`).
+  2. Imports: the buffer's imports expand aliases (`eg.Group` →
+     golang.org/x/sync/errgroup at the go.mod version).
+  3. Search: the filetype's source (`filetypes`) is searched for the
+     expression; a single exact match opens directly, otherwise the picker
+     opens with the query.
+For Lua `vim.*` symbols, |:help| is tried first.
+
+==============================================================================
+8. SEMANTIC SEARCH                                             *rtfm-semantic*
+
+`:Rtfm index {source}` chunks every installed page by heading (about
+`index.chunk_tokens` tokens per chunk), builds a BM25 index and, if an
+embedding model is reachable, embeds every chunk. Queries combine BM25 and
+cosine similarity with reciprocal rank fusion.
+
+Embedding providers (`index.embed`):
+  ollama  `{ provider = "ollama", model = "all-minilm" }` (default URL
+          http://localhost:11434). Run `ollama pull all-minilm`.
+  openai  any OpenAI-compatible `/v1/embeddings` server, e.g. llama.cpp:
+          `{ provider = "openai", url = "http://localhost:8080/v1",
+          model = "...", api_key = nil }`
+  false   keyword search only.
+
+Queries with at least `index.semantic_min_words` words use hybrid search
+automatically in indexed sources. `:Rtfm ask` searches every index.
+
+==============================================================================
+9. OFFLINE                                                      *rtfm-offline*
+
+`:Rtfm install {source}` stores a source under stdpath("data")/rtfm/docs.
+DevDocs downloads its full database; versioned pkg.go.dev and docs.rs
+sources and sitemap sites are crawled politely (`offline_install`).
+Installed sources are always read from disk. With `offline = true` (or
+`:Rtfm offline on`) rtfm never uses the network, except for the local
+embedding server; cached pages and installed docs keep working.
+
+==============================================================================
+10. CONFIGURATION                                                *rtfm-config*
+
+>lua
+  require("rtfm").setup({
+    open = "buffer",            -- buffer | split | vsplit | tab | float
+    offline = false,
+    ui = {
+      width = 0.85, height = 0.8, border = "rounded", preview = true,
+      results_width = 0.42, debounce = 250, preview_debounce = 120,
+      max_results = 300,
+      icons = { prompt = "> ", favorite = "★", project = "⚑",
+                installed = "●", semantic = "≈" },
+    },
+    keymaps = {
+      picker = { ["<CR>"] = "open", ["<C-s>"] = "open_split", ... },
+      viewer = { ["<CR>"] = "follow", ["q"] = "close", ... },
+    },
+    viewer = {
+      wo = { wrap = true, linebreak = true, conceallevel = 2, spell = false },
+      float = { width = 0.8, height = 0.85 },
+    },
+    links = { same_site = "rtfm", other_site = "browser" },
+    html = { converter = "builtin" },          -- builtin | pandoc | auto
+    devdocs = { enabled = true, latest_only = true, only = nil },
+    project = { enabled = true, markers = { "go.mod", "Cargo.toml", ... } },
+    symbol = { open = "split", lsp = true, timeout = 1500, keymap = nil },
+    index = {
+      embed = { provider = "ollama", model = "all-minilm", url = nil,
+                api_key = nil, batch = 32 },
+      chunk_tokens = 300, semantic_min_words = 4, top_k = 50,
+    },
+    offline_install = { concurrency = 4, delay = 100, max_pages = 5000 },
+    cache = { ttl = 604800 },
+    http = { timeout = 20, user_agent = "rtfm.nvim/0.1 (Neovim docs reader)" },
+    sources = {},
+    filetypes = { go = "gopkg", python = "python", rust = "docsrs", ... },
+  })
+<
+Keymap values are action names, functions, or false to disable the key.
+
+==============================================================================
+11. LUA API                                                         *rtfm-api*
+
+require("rtfm").setup({opts})
+require("rtfm").open({opts})        picker; opts: source, query, mode
+require("rtfm").search(id, query, { first = true })
+require("rtfm").symbol({ mode = "vsplit" })
+require("rtfm").ask(question)
+require("rtfm").install(id), .index(id), .uninstall(id)
+require("rtfm").bookmarks(), .history(), .project(), .installed()
+require("rtfm").open_url(url)
+require("rtfm").set_offline(bool)
+
+==============================================================================
+12. HIGHLIGHTS AND EVENTS                                    *rtfm-highlights*
+
+RtfmNormal RtfmBorder RtfmTitle RtfmFooter RtfmChip RtfmPrompt RtfmMatch
+RtfmKind RtfmSelection RtfmFavorite RtfmProject RtfmInstalled RtfmSemantic
+RtfmFlash
+
+                                                             *RtfmPageOpen*
+`User RtfmPageOpen` fires after a page is rendered. `data` has `buf` and
+`page` (title, url, lines, anchors, source_id, item).
+
+ vim:tw=78:ts=8:ft=help:norl:
