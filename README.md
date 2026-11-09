@@ -1,8 +1,30 @@
-# rtfm.nvim
+<p align="center">
+  <img src="assets/logos/C-lockup.svg" alt="rtfm.nvim: a cat whose eyes spell rtfm in braille" width="440">
+</p>
 
-> Have you ever had to read docs while coding?
-> Have you ever wanted to never, ever leave Neovim?
-> **rtfm.nvim** — read the manual without leaving your editor.
+<p align="center">
+  <em>read the manual without leaving your editor.</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Neovim-0.10%2B-7d93a8?style=flat-square&logo=neovim&logoColor=white&labelColor=101010" alt="Neovim 0.10+">
+  <img src="https://img.shields.io/badge/pure-Lua-7d93a8?style=flat-square&logo=lua&logoColor=white&labelColor=101010" alt="pure Lua">
+  <img src="https://img.shields.io/badge/works-offline-7d93a8?style=flat-square&labelColor=101010" alt="works offline">
+  <img src="https://img.shields.io/badge/license-MIT-7d93a8?style=flat-square&labelColor=101010" alt="MIT license">
+</p>
+
+<p align="center">
+  <a href="#why">Why</a> ·
+  <a href="#see-it">See it</a> ·
+  <a href="#installation">Install</a> ·
+  <a href="#usage">Usage</a> ·
+  <a href="#semantic-search-setup">Semantic search</a> ·
+  <a href="#configuration">Config</a>
+</p>
+
+> Have you ever had to read docs while coding?\
+> Have you ever wanted to never, ever leave Neovim?\
+> We have a solution for you.
 
 rtfm searches documentation, renders pages as Markdown buffers, and knows *which* docs you
 need: the exact versions your project depends on, the symbol under your cursor, and the
@@ -87,7 +109,7 @@ No build step and no binaries: pure Lua plus `curl`.
 
 ```lua
 {
-  dir = "~/source/repos/rtfm.nvim", -- or "<github-user>/rtfm.nvim" once published
+  "bshafim/rtfm.nvim",
   cmd = "Rtfm",
   keys = {
     { "<leader>dd", "<cmd>Rtfm<cr>", desc = "Docs" },
@@ -269,3 +291,5 @@ make live             # smoke test against the real endpoints
 ## License
 
 MIT
+
+<p align="center"><sub>⠗⠞⠋⠍</sub></p>
