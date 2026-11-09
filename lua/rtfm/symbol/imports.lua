@@ -119,21 +119,23 @@ end
 
 function M.rust_uses(text)
   local out = {}
+  local function split_as(item)
+    local path, alias = item:match("^(.-)@as@([%w_]+)$")
+    return path or item, alias
+  end
   for body in text:gmatch("use%s+([^;]+);") do
-    body = body:gsub("%s+", "")
+    body = body:gsub("%s+as%s+", "@as@"):gsub("%s+", "")
     local prefix, group = body:match("^(.-)::(%b{})$")
     if prefix then
       for item in group:sub(2, -2):gmatch("[^,]+") do
-        local path, alias = item:match("^(.-)as([%w_]+)$")
-        path = path or item
+        local path, alias = split_as(item)
         local name = alias or path:match("([%w_]+)$")
         if name and name ~= "self" then
           out[name] = prefix .. "::" .. path
         end
       end
     else
-      local path, alias = body:match("^(.-)as([%w_]+)$")
-      path = path or body
+      local path, alias = split_as(body)
       local name = alias or path:match("([%w_]+)$")
       if name then
         out[name] = path

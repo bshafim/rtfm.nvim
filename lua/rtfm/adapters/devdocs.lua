@@ -179,8 +179,11 @@ function M.install(source, dir, progress, cb)
         return cb(err2)
       end
       M.forget_installed(source)
-      local db = installed_db(source)
-      cb(nil, { pages = db and vim.tbl_count(db) or 0 })
+      local db = util.json_decode(util.read_file(dir .. "/db.json") or "")
+      if not db then
+        return cb("downloaded db.json is not valid JSON")
+      end
+      cb(nil, { pages = vim.tbl_count(db) })
     end)
   end)
 end

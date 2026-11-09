@@ -33,6 +33,7 @@ function M.chunk(lines, anchors, opts)
   local chunks = {}
   local stack = {} -- heading texts by level
   local buf, buf_tokens, start_line = {}, 0, 1
+  local link_lines, text_lines = 0, 0
   local fragment = nil
   local in_fence = false
 
@@ -51,7 +52,10 @@ function M.chunk(lines, anchors, opts)
 
   local function flush()
     local text = vim.trim(table.concat(buf, "\n"))
-    if text ~= "" and approx_tokens(text) >= 8 then
+    -- skip navigation-like sections (lists of links: "Index", "See also", ...)
+    local navigational = text_lines > 2 and link_lines / text_lines > 0.6
+    link_lines, text_lines = 0, 0
+    if text ~= "" and approx_tokens(text) >= 8 and not navigational then
       table.insert(chunks, { heading = heading_path(), fragment = fragment, text = text, line = start_line })
     end
     buf, buf_tokens = {}, 0
@@ -74,7 +78,8 @@ function M.chunk(lines, anchors, opts)
       end
       fragment = line_anchor[i] or fragment
       if lvl == 1 then
-        fragment = line_anchor[i]
+        -- the page title: open at the top, no fragment needed
+        fragment = i > 3 and line_anchor[i] or nil
       end
       start_line = i
     else
@@ -82,6 +87,13 @@ function M.chunk(lines, anchors, opts)
       if buf_tokens + t > max_tokens and buf_tokens > max_tokens / 3 and not in_fence then
         flush()
         start_line = i
+      end
+      if line ~= "" and not in_fence then
+        text_lines = text_lines + 1
+        local stripped = line:gsub("%[[^%]]*%]%b()", ""):gsub("^%s*[-*%d%.]+%s*", "")
+        if line:find("](", 1, true) and not stripped:match("%w%w%w") then
+          link_lines = link_lines + 1
+        end
       end
       if line ~= "" or #buf > 0 then
         table.insert(buf, clean(line))

@@ -20,7 +20,7 @@ function M.expr_at(line, col)
   while s > 1 and line:sub(s - 1, s - 1):match(allowed) do
     s = s - 1
   end
-  while e < #line and line:sub(e + 1, e + 1):match("[%w_$]") do
+  while e < #line and line:sub(e + 1, e + 1):match(allowed) do
     e = e + 1
   end
   local expr = line:sub(s, e):gsub("^[%.:]+", ""):gsub("[%.:]+$", "")

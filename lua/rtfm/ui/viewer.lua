@@ -300,11 +300,12 @@ function M.follow_url(href, win)
     end
     return
   end
-  if not urllib.is_http(href) then
+  local source = p and sources.get_sync(p.source_id)
+  local adapter = source and sources.adapter(source.adapter)
+  local resolved = adapter and adapter.resolve and adapter.resolve(source, href)
+  if not resolved and not urllib.is_http(href) then
     return util.warn("not a web link: " .. href)
   end
-  local source = p and sources.get_sync(p.source_id)
-  local resolved = source and sources.adapter(source.adapter).resolve and sources.adapter(source.adapter).resolve(source, href)
   local links = config.options.links
   if resolved then
     local target_id = resolved.source_id or source.id
