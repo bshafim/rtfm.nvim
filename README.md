@@ -8,16 +8,42 @@ rtfm searches documentation, renders pages as Markdown buffers, and knows *which
 need: the exact versions your project depends on, the symbol under your cursor, and the
 answer to a question even when you don't know the API name. All of it works offline.
 
-```
-┌ rtfm · search ─────────────────────┬─ func WithTimeout ─────────────────────┐
-│ [ Go 1.22.5 ] cancel after timeout │ ## func WithTimeout                    │
-├────────────────────────────────────┤                                        │
-│ ≈ context.WithTimeout   Package co…│ func WithTimeout(parent Context,       │
-│ ≈ context.WithDeadline  Package co…│     timeout time.Duration) (Context,   │
-│ ≈ http.Client.Timeout   Package ht…│     CancelFunc)                        │
-│   context.WithCancel      function │                                        │
-└────────────────────────────────────┴────────────────────────────────────────┘
-```
+![rtfm: pick a source, search, preview, read](assets/picker.gif)
+
+## Why
+
+I live in Neovim, and my fingers know its motions better than my own handwriting. Opening docs in
+the browser was never a big problem, but it meant switching to a whole different way of moving
+around: mouse, tabs, scroll, `Ctrl+F`. I tried Tridactyl to get Vim keys in Firefox, and it's
+genuinely good, but I never fully got used to it. So I flipped the problem around: instead of making
+the browser feel like Neovim, why not bring the docs into Neovim? (Also, leaving Neovim is
+overrated.)
+
+It grew a few opinions along the way. These days it's easy to skip the docs entirely and just ask a
+model. That's handy, right up until the answer is for a different version than yours, or describes
+a function that doesn't exist. rtfm treats the documentation itself as the source of truth, for
+the exact version your project uses. There is a model in here, but it's a small one (about 45 MB)
+running on your own machine, and its only job is to help you *find* the right section. It never
+writes the answer for you. No API keys, nothing leaves your laptop, and it works on a plane.
+
+Sometimes the most useful tool is the one that just helps you read the manual.
+
+## See it
+
+**Docs for the symbol under your cursor, at the version you actually use.** `gK` on
+`http.NewRequestWithContext` asks the LSP where it's defined, works out the package and version, and
+opens that page in a split, scrolled to the symbol:
+
+![gK opens net/http at your Go version and errgroup at your go.mod version](assets/symbol.gif)
+
+**Ask in plain English.** A local embedding model searches your installed docs, so "wait for
+multiple goroutines to finish" finds `sync.WaitGroup` even if you've never heard of it:
+
+![:Rtfm ask finds the right API from a plain-English question](assets/ask.gif)
+
+**Offline.** With the network switched off, remote sources say so, and installed docs keep working:
+
+![offline mode: installed docs still searchable and readable](assets/offline.gif)
 
 ## Features
 
@@ -122,6 +148,8 @@ Source ids: DevDocs slugs (`go`, `python~3.12`, `react~18`, aliases like `py`), 
 
 Doc buffers are `filetype=markdown`, named `rtfm://<source>/<page>`.
 
+![a rendered doc page](assets/page.png)
+
 | Key | Action |
 |---|---|
 | `<CR>` / `gd` | follow the link under the cursor (same site → rtfm, other sites → browser) |
@@ -204,7 +232,7 @@ require("rtfm").setup({
 ```
 
 Highlight groups: `RtfmChip`, `RtfmMatch`, `RtfmKind`, `RtfmFavorite`, `RtfmProject`,
-`RtfmInstalled`, `RtfmSemantic`, `RtfmSelection`, `RtfmFlash`, `RtfmTitle`, `RtfmFooter`.
+`RtfmInstalled`, `RtfmSemantic`, `RtfmSelection`, `RtfmCaret`, `RtfmFlash`, `RtfmTitle`, `RtfmFooter`.
 
 Event: `User RtfmPageOpen` (with `data = { buf, page }`) fires when a page finishes loading.
 
@@ -226,8 +254,9 @@ cache in `stdpath("cache")/rtfm`. When the network is down, a stale cached copy 
 ## Development
 
 ```sh
-make test   # offline test suite (fixtures, headless nvim)
-make live   # smoke test against the real endpoints
+make test             # offline test suite (fixtures, headless nvim)
+make live             # smoke test against the real endpoints
+./assets/record.sh    # re-record the README GIFs with vhs (uses your nvim config)
 ```
 
 ## License
