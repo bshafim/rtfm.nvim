@@ -255,6 +255,27 @@ function M.dir_size(path)
   return total
 end
 
+--- Split TOML-ish text into the bodies of each `header` block (e.g. "[[package]]").
+function M.toml_blocks(text, header)
+  text = "\n" .. text
+  local marker = "\n" .. header
+  local starts, init = {}, 1
+  while true do
+    local s, e = text:find(marker, init, true)
+    if not s then
+      break
+    end
+    table.insert(starts, { s, e })
+    init = e + 1
+  end
+  local out = {}
+  for i, se in ipairs(starts) do
+    local stop = starts[i + 1] and (starts[i + 1][1] - 1) or #text
+    table.insert(out, text:sub(se[2] + 1, stop))
+  end
+  return out
+end
+
 function M.human_size(bytes)
   local units = { "B", "KB", "MB", "GB" }
   local i = 1
