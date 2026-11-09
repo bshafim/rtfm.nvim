@@ -381,13 +381,27 @@ function M.toc_items(buf)
   return items
 end
 
+--- 'quickfixtextfunc' for the TOC: just the indented heading text.
+function M.toc_text(info)
+  local items = vim.fn.getloclist(info.winid, { id = info.id, items = 1 }).items
+  local out = {}
+  for i = info.start_idx, info.end_idx do
+    out[#out + 1] = items[i].text
+  end
+  return out
+end
+
 function M.actions.toc()
   local buf = vim.api.nvim_get_current_buf()
   local items = M.toc_items(buf)
   if #items == 0 then
     return util.notify("no headings on this page")
   end
-  vim.fn.setloclist(0, {}, " ", { title = "Contents", items = items })
+  vim.fn.setloclist(0, {}, " ", {
+    title = "Contents",
+    items = items,
+    quickfixtextfunc = "v:lua.require'rtfm.ui.viewer'.toc_text",
+  })
   vim.cmd("lopen")
 end
 

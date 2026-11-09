@@ -18,6 +18,7 @@ local M = {}
 
 local ns = vim.api.nvim_create_namespace("rtfm.picker")
 local ns_chip = vim.api.nvim_create_namespace("rtfm.picker.chip")
+local ns_sel = vim.api.nvim_create_namespace("rtfm.picker.sel")
 
 ---@type table|nil the open picker
 local P
@@ -26,6 +27,21 @@ local P
 
 local function valid(win)
   return win and vim.api.nvim_win_is_valid(win)
+end
+
+--- Mark the selected row with a caret (visible regardless of the theme's CursorLine).
+local function place_caret()
+  if not P or not vim.api.nvim_buf_is_valid(P.bufs.results) then
+    return
+  end
+  vim.api.nvim_buf_clear_namespace(P.bufs.results, ns_sel, 0, -1)
+  if P.matches[P.sel] then
+    vim.api.nvim_buf_set_extmark(P.bufs.results, ns_sel, P.sel - 1, 0, {
+      virt_text = { { "▌", "RtfmCaret" } },
+      virt_text_pos = "overlay",
+      priority = 200,
+    })
+  end
 end
 
 local function is_ascii(s)
@@ -187,6 +203,7 @@ local function render_results()
       vim.api.nvim_win_set_cursor(P.wins.results, { P.sel, 0 })
     end
   end
+  place_caret()
 end
 
 -- preview ---------------------------------------------------------------------------------
@@ -263,10 +280,6 @@ local function update_preview()
   if P.mode == "source" then
     return set_preview(source_info(m.item), { title = m.item.name })
   end
-  local src = source_of_match(m)
-  if not src then
-    return
-  end
   if m.item._source_id and not m.item._source then
     -- list entries carry a source id only; resolve it first
     return sources.get(m.item._source_id, function(err, s)
@@ -276,6 +289,10 @@ local function update_preview()
       m.item._source = s
       update_preview()
     end)
+  end
+  local src = source_of_match(m)
+  if not src then
+    return
   end
   set_preview({ "", "  _Loading…_" }, { title = m.item.title })
   P.preview_debounced(src, m.item, req)
@@ -616,6 +633,7 @@ local function move(delta)
   if valid(P.wins.results) then
     vim.api.nvim_win_set_cursor(P.wins.results, { P.sel, 0 })
   end
+  place_caret()
   update_preview()
 end
 

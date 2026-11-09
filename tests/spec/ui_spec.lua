@@ -130,6 +130,11 @@ it("records history and bookmarks", function()
     return picker._state() and #picker._state().matches == 1
   end)
   contains(lines(picker._state().bufs.results)[1], "Beta")
+  -- list entries carry only a source id; the preview must still resolve and load
+  wait(function()
+    return table.concat(lines(picker._state().bufs.preview), "\n"):find("# Beta") ~= nil
+  end)
+  contains(lines(picker._state().bufs.preview), "# Beta")
   picker.actions.delete()
   eq(0, #store.bookmarks())
   picker.close()

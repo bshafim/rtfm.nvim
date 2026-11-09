@@ -67,7 +67,7 @@ M.defaults = {
 
   viewer = {
     -- window-local options for doc windows
-    wo = { wrap = true, linebreak = true, conceallevel = 2, spell = false },
+    wo = { wrap = true, linebreak = true, conceallevel = 2, spell = false, number = false, relativenumber = false, signcolumn = "no" },
     float = { width = 0.8, height = 0.85 },
   },
 
