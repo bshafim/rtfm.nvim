@@ -94,6 +94,7 @@ M.defaults = {
     open = "split", -- how :Rtfm symbol opens pages
     lsp = true,
     timeout = 1500, -- ms to wait for LSP
+    keymap = nil, -- e.g. "gK" to map symbol lookup globally
   },
 
   index = {
